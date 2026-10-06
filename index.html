@@ -12,12 +12,18 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&amp;family=Noto+Serif+JP:wght@400&amp;display=swap">
     <link rel="stylesheet" href="styles.css">
     <script src="sample-data.js" defer></script>
-    <script src="app.js?v=p1.8" defer></script>
+    <script src="sample-presentation.js" defer></script>
+    <script src="presentation.js" defer></script>
+    <script src="app.js?v=p2" defer></script>
   </head>
   <body>
     <header class="workspace-header no-print">
       <div class="workspace-brand"><strong class="structural-label">MEKURU</strong><span class="structural-label">Peel back your perception.</span></div>
       <div class="workspace-actions">
+        <div class="mode-switch structural-label" role="group" aria-label="表示モード">
+          <button id="essay-mode" type="button" aria-pressed="true">ESSAY</button>
+          <button id="presentation-mode" type="button" aria-pressed="false">PRESENTATION</button>
+        </div>
         <button id="sample-button" type="button">サンプルを表示</button>
         <button id="print-button" type="button">印刷</button>
       </div>
@@ -40,9 +46,13 @@
       </details>
       <p id="status" class="status no-print" role="status" aria-live="polite"></p>
 
-      <nav class="page-nav structural-label no-print" aria-label="観測記録のページ移動">
+      <nav class="page-nav structural-label no-print" id="essay-nav" aria-label="観測記録のページ移動">
         <a href="#facts">01 FACTS</a><a href="#received">02 RECEIVED</a>
         <a href="#inference">03 INFERENCE</a><a href="#reconstructed">04 RECONSTRUCTED</a>
+      </nav>
+      <nav class="page-nav structural-label no-print mode-hidden" id="presentation-nav" aria-label="発表の観測記録のセクション移動">
+        <a href="#presentation-facts">FACTS</a><a href="#presentation-received">RECEIVED</a>
+        <a href="#presentation-inference">INFERENCE</a><a href="#presentation-reconstructed">RECONSTRUCTED</a>
       </nav>
 
       <div class="sheets" id="sheets">
@@ -96,6 +106,7 @@
           </div>
         </section>
       </div>
+      <div class="sheets mode-hidden" id="presentation-sheets"></div>
     </main>
   </body>
 </html>

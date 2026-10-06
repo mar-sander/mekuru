@@ -3,6 +3,8 @@
 const jsonInput = document.querySelector("#json-input");
 const jsonFile = document.querySelector("#json-file");
 const status = document.querySelector("#status");
+let currentMode = "essay";
+const currentData = { essay: SAMPLE_DATA, presentation: PRESENTATION_SAMPLE_DATA };
 const documentTypeLabels = {
   essay: "小論文",
   application_essay: "志願理由書",
@@ -11,7 +13,7 @@ const documentTypeLabels = {
 };
 
 /* データの形だけを確認する。文章の意味や妥当性は判定しない。 */
-function validateData(data) {
+function validateEssayData(data) {
   const isText = value => typeof value === "string" && value.trim().length > 0;
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
     throw new Error("JSONの最上位はオブジェクトにしてください。");
@@ -39,6 +41,17 @@ function validateData(data) {
     throw new Error("reconstructed.body に文章を指定してください。");
   }
   return data;
+}
+
+/* スキーマごとに検証責務を分け、既存のversion 0.1はmode不要で受け取る。 */
+function validateData(data) {
+  if (data && data.version === "0.1" && data.mode === undefined) {
+    return validateEssayData(data);
+  }
+  if (data && data.version === "0.2" && data.mode === "presentation") {
+    return validatePresentationData(data);
+  }
+  throw new Error('version 0.1（modeなし）または version 0.2 / mode "presentation" を指定してください。');
 }
 
 function setStatus(message, isError = false) {
@@ -72,8 +85,7 @@ function replaceList(selector, items) {
 }
 
 /* JSONはそのままに、句点ごとに一文を表示する。既存の文頭改行は重ねない。 */
-function renderReconstructed(body) {
-  const container = document.querySelector("#reconstructed-body");
+function renderReconstructed(body, container = document.querySelector("#reconstructed-body")) {
   const nodes = [];
   let sentenceStart = 0;
 
@@ -97,7 +109,7 @@ function renderReconstructed(body) {
   container.replaceChildren(...nodes);
 }
 
-function render(data) {
+function renderEssay(data) {
   replaceList("#facts-list", data.facts.map(item =>
     makeObservation(item.text, item.evidence, "EVIDENCE")));
   replaceList("#received-list", data.received.map(text =>
@@ -107,28 +119,72 @@ function render(data) {
 
   renderReconstructed(data.reconstructed.body);
   const type = documentTypeLabels[data.documentType] || data.documentType;
-  document.querySelectorAll(".document-label").forEach(label => {
+  document.querySelectorAll("#sheets .document-label").forEach(label => {
     label.textContent = `${type} · ${data.title}`;
   });
   document.title = `${data.title} | MEKURU`;
 }
 
+/* MODE切替は操作領域だけで行い、ESSAYの紙面DOMを維持する。 */
+function updateModeVisibility() {
+  const presentation = currentMode === "presentation";
+  document.querySelector("#sheets").classList.toggle("mode-hidden", presentation);
+  document.querySelector("#essay-nav").classList.toggle("mode-hidden", presentation);
+  document.querySelector("#presentation-sheets").classList.toggle("mode-hidden", !presentation);
+  document.querySelector("#presentation-nav").classList.toggle("mode-hidden", !presentation);
+  document.querySelector("#essay-mode").setAttribute("aria-pressed", String(!presentation));
+  document.querySelector("#presentation-mode").setAttribute("aria-pressed", String(presentation));
+}
+
+function showData(data) {
+  const nextMode = data.mode === "presentation" ? "presentation" : "essay";
+  const previousMode = currentMode;
+  currentMode = nextMode;
+  updateModeVisibility();
+  try {
+    if (nextMode === "presentation") renderPresentation(data);
+    else renderEssay(data);
+  } catch (error) {
+    currentMode = previousMode;
+    updateModeVisibility();
+    if (previousMode === "presentation") renderPresentation(currentData.presentation);
+    throw error;
+  }
+  currentData[nextMode] = data;
+  document.title = `${data.title} | MEKURU`;
+}
+
+function switchMode(mode) {
+  if (mode === currentMode) return;
+  try {
+    showData(currentData[mode]);
+    setStatus(`${mode === "essay" ? "ESSAY" : "PRESENTATION"} MODEを表示しています。`);
+  } catch (error) {
+    setStatus(`表示できませんでした：${error.message}`, true);
+  }
+}
+
 function applyJson(raw, successMessage) {
   try {
     const data = validateData(JSON.parse(raw));
-    render(data);
+    showData(data);
     setStatus(successMessage);
   } catch (error) {
-    // 読み込み失敗時は現在の4ページを保持する。
+    // 読み込み失敗時は現在の表示を保持する。
     setStatus(`読み込めませんでした：${error.message}`, true);
   }
 }
 
 /* サンプルと貼り付けは同じ描画経路を使用する。 */
 document.querySelector("#sample-button").addEventListener("click", () => {
-  jsonInput.value = JSON.stringify(SAMPLE_DATA, null, 2);
+  jsonInput.value = JSON.stringify(
+    currentMode === "essay" ? SAMPLE_DATA : PRESENTATION_SAMPLE_DATA, null, 2
+  );
   applyJson(jsonInput.value, "サンプルデータを表示しました。");
 });
+
+document.querySelector("#essay-mode").addEventListener("click", () => switchMode("essay"));
+document.querySelector("#presentation-mode").addEventListener("click", () => switchMode("presentation"));
 
 document.querySelector("#apply-button").addEventListener("click", () => {
   applyJson(jsonInput.value, "貼り付けたJSONを反映しました。");
@@ -146,7 +202,7 @@ jsonFile.addEventListener("change", async () => {
     const content = await file.text();
     const data = validateData(JSON.parse(content));
     jsonInput.value = content;
-    render(data);
+    showData(data);
     setStatus(`${file.name} を表示しました。`);
   } catch (error) {
     setStatus(`読み込めませんでした：${error.message}`, true);
@@ -157,5 +213,32 @@ jsonFile.addEventListener("change", async () => {
 
 document.querySelector("#print-button").addEventListener("click", () => window.print());
 
-render(validateData(SAMPLE_DATA));
+/* フォントと紙面幅の確定後に、発表の項目高さを測り直す。 */
+let presentationPrintActive = false;
+function refreshPresentationPages() {
+  if (currentMode !== "presentation" || presentationPrintActive) return;
+  try {
+    renderPresentation(currentData.presentation);
+  } catch (error) {
+    setStatus(`表示できませんでした：${error.message}`, true);
+  }
+}
+
+document.fonts.ready.then(refreshPresentationPages);
+let resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(refreshPresentationPages, 150);
+});
+// 印刷中は画面で確定したページ・番号を保持する。印刷用CSSでの再分割を避ける。
+window.addEventListener("beforeprint", () => {
+  presentationPrintActive = true;
+  clearTimeout(resizeTimer);
+});
+window.addEventListener("afterprint", () => {
+  presentationPrintActive = false;
+  refreshPresentationPages();
+});
+
+renderEssay(validateData(SAMPLE_DATA));
 setStatus("サンプルデータを表示しています。");
