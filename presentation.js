@@ -1,6 +1,10 @@
 "use strict";
 
-const factSources = { slide: "SLIDE", script: "SCRIPT", both: "BOTH" };
+const factSources = {
+  slide: "SLIDE ONLY",
+  script: "SCRIPT ONLY",
+  both: "SLIDE + SCRIPT"
+};
 const receivedSources = {
   slide_only: "SLIDE ONLY",
   script_only: "SCRIPT ONLY",
@@ -71,8 +75,8 @@ function createPresentationSheet(section, data, sequence) {
   return { sheet, content, list };
 }
 
-function makeSourcedObservation(text, source, evidence, number) {
-  const item = makeObservation(text, evidence, "EVIDENCE");
+function makeSourcedObservation(text, source, number) {
+  const item = makeObservation(text);
   const index = document.createElement("span");
   const label = document.createElement("span");
   index.className = "presentation-index structural-label";
@@ -105,7 +109,7 @@ function renderPresentation(data) {
     data[section].forEach((observation, index) => {
       const sources = section === "facts" ? factSources : receivedSources;
       const item = makeSourcedObservation(
-        observation.text, sources[observation.source], observation.evidence, index + 1
+        observation.text, sources[observation.source], index + 1
       );
       page.list.append(item);
       if (!fits(page, item)) {

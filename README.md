@@ -24,6 +24,8 @@
 
 `sample-presentation.json` が入力例です。`mode` は `presentation`、`documentType` も `presentation` にしてください。`facts` は `text`、`source`（`slide`／`script`／`both`）、任意の `evidence` を持つ配列です。`received` は `text` と `source`（`slide_only`／`script_only`／`slide_script`）を持つ配列です。`inference` と `reconstructed` はESSAYと同じ構造です。
 
+FACTSの`source`は画面上でそれぞれSLIDE ONLY／SCRIPT ONLY／SLIDE + SCRIPTと表示します。FACTSの`evidence`はJSON内に保持し、画面と印刷には表示しません。ESSAYのEVIDENCE表示は従来どおりです。
+
 FACTSとRECEIVEDは描画された項目高さに従ってA4ページを増やし、各項目を途中で分割しません。1項目だけでA4の本文領域を超える場合はエラーにします。INFERENCEとRECONSTRUCTEDは各1ページです。印刷前にWebフォントを読み込んでください。
 
 ## 印刷上の範囲
