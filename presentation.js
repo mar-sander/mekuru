@@ -66,7 +66,7 @@ function createPresentationSheet(section, data, sequence) {
     if (section === "facts" || section === "received") {
       list.classList.add("presentation-observations");
     }
-    if (section === "inference") {
+    if (section === "inference" && sequence === 0) {
       const intro = document.querySelector("#inference .section-intro").cloneNode(true);
       content.append(intro);
     }
@@ -103,14 +103,14 @@ function renderPresentation(data) {
       page.sheet.querySelector(".sheet-footer").getBoundingClientRect().top - 8;
   }
 
-  for (const section of ["facts", "received"]) {
+  for (const section of ["facts", "received", "inference"]) {
     let sequence = 0;
     let page = appendPage(section, sequence);
     data[section].forEach((observation, index) => {
       const sources = section === "facts" ? factSources : receivedSources;
-      const item = makeSourcedObservation(
-        observation.text, sources[observation.source], index + 1
-      );
+      const item = section === "inference"
+        ? makeObservation(observation.text, observation.reason, "REASON")
+        : makeSourcedObservation(observation.text, sources[observation.source], index + 1);
       page.list.append(item);
       if (!fits(page, item)) {
         item.remove();
@@ -118,6 +118,8 @@ function renderPresentation(data) {
           throw new Error(`${section.toUpperCase()} の項目 ${index + 1} がA4一枚の本文領域を超えています。`);
         }
         page = appendPage(section, ++sequence);
+        // CSSの項目カウンターを前ページの続きから始める。
+        if (section === "inference") page.list.style.counterReset = `item ${index}`;
         page.list.append(item);
         if (!fits(page, item)) {
           throw new Error(`${section.toUpperCase()} の項目 ${index + 1} がA4一枚の本文領域を超えています。`);
@@ -144,15 +146,39 @@ function renderPresentation(data) {
     }
   }
 
-  const inference = appendPage("inference", 0);
-  inference.list.replaceChildren(...data.inference.map(item =>
-    makeObservation(item.text, item.reason, "REASON")));
+  // P1.8の安全な描画結果から文を取り出す。JSONやESSAYの描画は変更しない。
+  const sentences = document.createElement("div");
+  renderReconstructed(data.reconstructed.body, sentences);
+  let reconstructedSequence = 0;
+  let reconstructed;
+  let body;
 
-  const reconstructed = appendPage("reconstructed", 0);
-  const body = document.createElement("div");
-  body.className = "reconstructed-body reading-text";
-  reconstructed.content.append(body);
-  renderReconstructed(data.reconstructed.body, body);
+  function appendReconstructedPage() {
+    reconstructed = appendPage("reconstructed", reconstructedSequence++);
+    body = document.createElement("div");
+    body.className = "reconstructed-body reading-text";
+    reconstructed.content.append(body);
+  }
+
+  appendReconstructedPage();
+  [...sentences.childNodes].filter(node => node.nodeType === Node.TEXT_NODE)
+    .forEach((sentence, index) => {
+      const lineBreak = body.childNodes.length ? document.createElement("br") : null;
+      if (lineBreak) body.append(lineBreak);
+      body.append(sentence);
+      if (fits(reconstructed, body)) return;
+
+      sentence.remove();
+      if (lineBreak) lineBreak.remove();
+      if (body.childNodes.length === 0) {
+        throw new Error(`RECONSTRUCTED の文 ${index + 1} がA4一枚の本文領域を超えています。`);
+      }
+      appendReconstructedPage();
+      body.append(sentence);
+      if (!fits(reconstructed, body)) {
+        throw new Error(`RECONSTRUCTED の文 ${index + 1} がA4一枚の本文領域を超えています。`);
+      }
+    });
 
   const pages = [...container.querySelectorAll(".sheet")];
   pages.forEach((sheet, index) => {

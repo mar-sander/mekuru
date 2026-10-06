@@ -214,8 +214,9 @@ jsonFile.addEventListener("change", async () => {
 document.querySelector("#print-button").addEventListener("click", () => window.print());
 
 /* フォントと紙面幅の確定後に、発表の項目高さを測り直す。 */
+let presentationPrintActive = false;
 function refreshPresentationPages() {
-  if (currentMode !== "presentation") return;
+  if (currentMode !== "presentation" || presentationPrintActive) return;
   try {
     renderPresentation(currentData.presentation);
   } catch (error) {
@@ -229,8 +230,15 @@ window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(refreshPresentationPages, 150);
 });
-window.addEventListener("beforeprint", refreshPresentationPages);
-window.addEventListener("afterprint", refreshPresentationPages);
+// 印刷中は画面で確定したページ・番号を保持する。印刷用CSSでの再分割を避ける。
+window.addEventListener("beforeprint", () => {
+  presentationPrintActive = true;
+  clearTimeout(resizeTimer);
+});
+window.addEventListener("afterprint", () => {
+  presentationPrintActive = false;
+  refreshPresentationPages();
+});
 
 renderEssay(validateData(SAMPLE_DATA));
 setStatus("サンプルデータを表示しています。");
