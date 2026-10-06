@@ -71,6 +71,32 @@ function replaceList(selector, items) {
   list.replaceChildren(...items);
 }
 
+/* JSONはそのままに、句点ごとに一文を表示する。既存の文頭改行は重ねない。 */
+function renderReconstructed(body) {
+  const container = document.querySelector("#reconstructed-body");
+  const nodes = [];
+  let sentenceStart = 0;
+
+  function appendSentence(sentence) {
+    const text = sentence.trimStart();
+    if (!text.trim()) return;
+    if (nodes.length) nodes.push(document.createElement("br"));
+    nodes.push(document.createTextNode(text));
+  }
+
+  for (let index = 0; index < body.length; index += 1) {
+    if (body[index] !== "。") continue;
+
+    appendSentence(body.slice(sentenceStart, index + 1));
+    sentenceStart = index + 1;
+  }
+
+  if (sentenceStart < body.length) {
+    appendSentence(body.slice(sentenceStart));
+  }
+  container.replaceChildren(...nodes);
+}
+
 function render(data) {
   replaceList("#facts-list", data.facts.map(item =>
     makeObservation(item.text, item.evidence, "EVIDENCE")));
@@ -79,7 +105,7 @@ function render(data) {
   replaceList("#inference-list", data.inference.map(item =>
     makeObservation(item.text, item.reason, "REASON")));
 
-  document.querySelector("#reconstructed-body").textContent = data.reconstructed.body;
+  renderReconstructed(data.reconstructed.body);
   const type = documentTypeLabels[data.documentType] || data.documentType;
   document.querySelectorAll(".document-label").forEach(label => {
     label.textContent = `${type} · ${data.title}`;
