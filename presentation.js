@@ -1,5 +1,7 @@
 "use strict";
 
+const A4_PAGE_WIDTH_PX = 210 * 96 / 25.4;
+
 const factSources = {
   slide: "SLIDE ONLY",
   script: "SCRIPT ONLY",
@@ -87,6 +89,14 @@ function makeSourcedObservation(text, source, number) {
   return item;
 }
 
+/* 縮小プレビューの座標をA4上のCSS pixelへ戻して余裕を判定する。 */
+function fitsA4Page(page, element) {
+  const sheet = page.sheet;
+  const scale = sheet.getBoundingClientRect().width / A4_PAGE_WIDTH_PX;
+  return (sheet.querySelector(".sheet-footer").getBoundingClientRect().top -
+    element.getBoundingClientRect().bottom) / scale >= 8;
+}
+
 /* 実際に描画した項目の高さを用いて、項目を壊さず次のA4紙面へ送る。 */
 function renderPresentation(data) {
   const container = document.querySelector("#presentation-sheets");
@@ -98,10 +108,7 @@ function renderPresentation(data) {
     return page;
   }
 
-  function fits(page, element) {
-    return element.getBoundingClientRect().bottom <=
-      page.sheet.querySelector(".sheet-footer").getBoundingClientRect().top - 8;
-  }
+  const fits = fitsA4Page;
 
   for (const section of ["facts", "received", "inference"]) {
     let sequence = 0;

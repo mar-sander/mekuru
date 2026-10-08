@@ -226,12 +226,20 @@ jsonFile.addEventListener("change", async () => {
   }
 });
 
-document.querySelector("#print-button").addEventListener("click", () => window.print());
+document.querySelector("#print-button").addEventListener("click", async () => {
+  await document.fonts.ready;
+  refreshPresentationPages();
+  window.print();
+});
 
-/* フォントと紙面幅の確定後に、発表の項目高さを測り直す。 */
+/* 可変ページは常にA4で組版する。画面幅の変更はプレビュー倍率だけへ反映する。 */
 let presentationPrintActive = false;
-function refreshPresentationPages() {
-  if (currentMode === "essay" || presentationPrintActive) return;
+function updatePaperPreviewScale() {
+  const scale = Math.min(1, (document.documentElement.clientWidth - 24) / A4_PAGE_WIDTH_PX);
+  document.documentElement.style.setProperty("--paper-preview-scale", String(scale));
+}
+function refreshPresentationPages(forPrint = false) {
+  if (currentMode === "essay" || (presentationPrintActive && !forPrint)) return;
   try {
     if (currentMode === "presentation") renderPresentation(currentData.presentation);
     else renderInterpret(currentData.interpret);
@@ -240,20 +248,16 @@ function refreshPresentationPages() {
   }
 }
 
+updatePaperPreviewScale();
 document.fonts.ready.then(refreshPresentationPages);
-let resizeTimer;
-window.addEventListener("resize", () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(refreshPresentationPages, 150);
-});
-// 印刷中は画面で確定したページ・番号を保持する。印刷用CSSでの再分割を避ける。
+window.addEventListener("resize", updatePaperPreviewScale);
+// 直接の印刷操作でも最新のデータをA4条件で確定する。
 window.addEventListener("beforeprint", () => {
+  refreshPresentationPages(true);
   presentationPrintActive = true;
-  clearTimeout(resizeTimer);
 });
 window.addEventListener("afterprint", () => {
   presentationPrintActive = false;
-  refreshPresentationPages();
 });
 
 renderEssay(validateData(SAMPLE_DATA));

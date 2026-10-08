@@ -86,8 +86,8 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .source-label { grid-column: 2; grid-row: 1; font-size: 10px; line-height: 1.8; letter-spacing: .04em; color: #777; white-space: nowrap; }
 .presentation-observations .observation-text { grid-column: 3; }
 
-/* 狭い画面では紙面の順序を保ちつつ、本文を読める大きさにする。 */
-@media (max-width: 650px) {
+/* ESSAYの狭い画面表示と操作領域。可変ページの紙面は下でA4寸法へ戻す。 */
+@media screen and (max-width: 650px) {
   .workspace-header { align-items: flex-start; flex-direction: column; padding-top: 16px; }
   .workspace-actions { flex-wrap: wrap; }
   .workspace-brand { flex-wrap: wrap; gap: 5px 12px; }
@@ -112,13 +112,39 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
   .sheet-footer i { display: block; }
 }
 
-/* A4縦を4枚。ブラウザ側のヘッダー・フッターは印刷設定で無効にする。 */
+/* 可変ページは印刷と同じA4寸法で組み、狭い画面では紙面全体だけを縮小する。 */
+@media screen {
+  #presentation-sheets, #interpret-sheets {
+    width: 210mm;
+    margin-inline: auto;
+    padding: 0 0 52px;
+    zoom: var(--paper-preview-scale, 1);
+  }
+  .presentation-sheet { width: 210mm; height: 297mm; min-height: 0; }
+  .presentation-sheet .sheet-inner { width: 100%; height: 100%; padding: 16mm 17mm 15mm; }
+  .presentation-sheet .page-count { font-size: 14px; }
+  .presentation-sheet .heading-block { column-gap: 16px; margin-top: 6mm; }
+  .presentation-sheet .heading-block h1 { font-size: 31px; }
+  .presentation-sheet .heading-block p { font-size: 14px; }
+  .presentation-sheet .sheet-content { padding-top: 7mm; }
+  .presentation-sheet .observations li { grid-template-columns: 66px minmax(0, 1fr); column-gap: 8px; row-gap: 5px; padding-bottom: 12px; }
+  .presentation-sheet .presentation-observations li { grid-template-columns: 30px 112px minmax(0, 1fr); }
+  .presentation-sheet .source-label { font-size: 10px; }
+  .presentation-sheet .observation-text { font-size: 10pt; }
+  .presentation-sheet .reconstructed-content { padding-top: 9mm; }
+  .presentation-sheet .reconstructed-body { font-size: 10pt; }
+  .presentation-sheet .sheet-footer { font-size: 10px; }
+  .presentation-sheet .sheet-footer i { display: inline; }
+}
+
+/* A4縦。ブラウザ側のヘッダー・フッターは印刷設定で無効にする。 */
 @page { size: A4 portrait; margin: 0; }
 @media print {
   :root { background: #fff; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   html { scroll-behavior: auto; }
   .no-print { display: none !important; }
   .sheets { display: block; padding: 0; }
+  #presentation-sheets, #interpret-sheets { width: 210mm; margin: 0; zoom: 1 !important; }
   .sheet { width: 210mm; height: 297mm; min-height: 0; box-shadow: none; margin: 0; break-after: page; page-break-after: always; }
   .sheet:last-child { break-after: auto; page-break-after: auto; }
   .sheet-inner { width: 100%; height: 100%; min-height: 0; padding: 16mm 17mm 15mm; }

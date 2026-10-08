@@ -53,10 +53,7 @@ function renderInterpret(data) {
     return page;
   }
 
-  function fits(page, element) {
-    return element.getBoundingClientRect().bottom <=
-      page.sheet.querySelector(".sheet-footer").getBoundingClientRect().top - 8;
-  }
+  const fits = fitsA4Page;
 
   for (const section of ["facts", "received", "inference"]) {
     let sequence = 0;
