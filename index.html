@@ -13,8 +13,10 @@
     <link rel="stylesheet" href="styles.css">
     <script src="sample-data.js" defer></script>
     <script src="sample-presentation.js" defer></script>
+    <script src="sample-interpret.js" defer></script>
     <script src="presentation.js" defer></script>
-    <script src="app.js?v=p2" defer></script>
+    <script src="interpret.js" defer></script>
+    <script src="app.js?v=p3" defer></script>
   </head>
   <body>
     <header class="workspace-header no-print">
@@ -23,6 +25,7 @@
         <div class="mode-switch structural-label" role="group" aria-label="表示モード">
           <button id="essay-mode" type="button" aria-pressed="true">ESSAY</button>
           <button id="presentation-mode" type="button" aria-pressed="false">PRESENTATION</button>
+          <button id="interpret-mode" type="button" aria-pressed="false">INTERPRET</button>
         </div>
         <button id="sample-button" type="button">サンプルを表示</button>
         <button id="print-button" type="button">印刷</button>
@@ -53,6 +56,10 @@
       <nav class="page-nav structural-label no-print mode-hidden" id="presentation-nav" aria-label="発表の観測記録のセクション移動">
         <a href="#presentation-facts">FACTS</a><a href="#presentation-received">RECEIVED</a>
         <a href="#presentation-inference">INFERENCE</a><a href="#presentation-reconstructed">RECONSTRUCTED</a>
+      </nav>
+      <nav class="page-nav structural-label no-print mode-hidden" id="interpret-nav" aria-label="資料の観測記録のセクション移動">
+        <a href="#interpret-facts">FACTS</a><a href="#interpret-received">RECEIVED</a>
+        <a href="#interpret-inference">INFERENCE</a><a href="#interpret-reconstructed">RECONSTRUCTED</a>
       </nav>
 
       <div class="sheets" id="sheets">
@@ -107,6 +114,7 @@
         </section>
       </div>
       <div class="sheets mode-hidden" id="presentation-sheets"></div>
+      <div class="sheets mode-hidden" id="interpret-sheets"></div>
     </main>
   </body>
 </html>

@@ -4,7 +4,11 @@ const jsonInput = document.querySelector("#json-input");
 const jsonFile = document.querySelector("#json-file");
 const status = document.querySelector("#status");
 let currentMode = "essay";
-const currentData = { essay: SAMPLE_DATA, presentation: PRESENTATION_SAMPLE_DATA };
+const currentData = {
+  essay: SAMPLE_DATA,
+  presentation: PRESENTATION_SAMPLE_DATA,
+  interpret: INTERPRET_SAMPLE_DATA
+};
 const documentTypeLabels = {
   essay: "小論文",
   application_essay: "志願理由書",
@@ -51,7 +55,10 @@ function validateData(data) {
   if (data && data.version === "0.2" && data.mode === "presentation") {
     return validatePresentationData(data);
   }
-  throw new Error('version 0.1（modeなし）または version 0.2 / mode "presentation" を指定してください。');
+  if (data && data.version === "0.3" && data.mode === "interpret") {
+    return validateInterpretData(data);
+  }
+  throw new Error('version 0.1（modeなし）、0.2 / mode "presentation"、または0.3 / mode "interpret" を指定してください。');
 }
 
 function setStatus(message, isError = false) {
@@ -128,26 +135,32 @@ function renderEssay(data) {
 /* MODE切替は操作領域だけで行い、ESSAYの紙面DOMを維持する。 */
 function updateModeVisibility() {
   const presentation = currentMode === "presentation";
-  document.querySelector("#sheets").classList.toggle("mode-hidden", presentation);
-  document.querySelector("#essay-nav").classList.toggle("mode-hidden", presentation);
+  const interpret = currentMode === "interpret";
+  document.querySelector("#sheets").classList.toggle("mode-hidden", presentation || interpret);
+  document.querySelector("#essay-nav").classList.toggle("mode-hidden", presentation || interpret);
   document.querySelector("#presentation-sheets").classList.toggle("mode-hidden", !presentation);
   document.querySelector("#presentation-nav").classList.toggle("mode-hidden", !presentation);
-  document.querySelector("#essay-mode").setAttribute("aria-pressed", String(!presentation));
+  document.querySelector("#interpret-sheets").classList.toggle("mode-hidden", !interpret);
+  document.querySelector("#interpret-nav").classList.toggle("mode-hidden", !interpret);
+  document.querySelector("#essay-mode").setAttribute("aria-pressed", String(!presentation && !interpret));
   document.querySelector("#presentation-mode").setAttribute("aria-pressed", String(presentation));
+  document.querySelector("#interpret-mode").setAttribute("aria-pressed", String(interpret));
 }
 
 function showData(data) {
-  const nextMode = data.mode === "presentation" ? "presentation" : "essay";
+  const nextMode = data.mode || "essay";
   const previousMode = currentMode;
   currentMode = nextMode;
   updateModeVisibility();
   try {
     if (nextMode === "presentation") renderPresentation(data);
+    else if (nextMode === "interpret") renderInterpret(data);
     else renderEssay(data);
   } catch (error) {
     currentMode = previousMode;
     updateModeVisibility();
     if (previousMode === "presentation") renderPresentation(currentData.presentation);
+    if (previousMode === "interpret") renderInterpret(currentData.interpret);
     throw error;
   }
   currentData[nextMode] = data;
@@ -158,7 +171,7 @@ function switchMode(mode) {
   if (mode === currentMode) return;
   try {
     showData(currentData[mode]);
-    setStatus(`${mode === "essay" ? "ESSAY" : "PRESENTATION"} MODEを表示しています。`);
+    setStatus(`${mode.toUpperCase()} MODEを表示しています。`);
   } catch (error) {
     setStatus(`表示できませんでした：${error.message}`, true);
   }
@@ -178,13 +191,15 @@ function applyJson(raw, successMessage) {
 /* サンプルと貼り付けは同じ描画経路を使用する。 */
 document.querySelector("#sample-button").addEventListener("click", () => {
   jsonInput.value = JSON.stringify(
-    currentMode === "essay" ? SAMPLE_DATA : PRESENTATION_SAMPLE_DATA, null, 2
+    { essay: SAMPLE_DATA, presentation: PRESENTATION_SAMPLE_DATA, interpret: INTERPRET_SAMPLE_DATA }[currentMode],
+    null, 2
   );
   applyJson(jsonInput.value, "サンプルデータを表示しました。");
 });
 
 document.querySelector("#essay-mode").addEventListener("click", () => switchMode("essay"));
 document.querySelector("#presentation-mode").addEventListener("click", () => switchMode("presentation"));
+document.querySelector("#interpret-mode").addEventListener("click", () => switchMode("interpret"));
 
 document.querySelector("#apply-button").addEventListener("click", () => {
   applyJson(jsonInput.value, "貼り付けたJSONを反映しました。");
@@ -216,9 +231,10 @@ document.querySelector("#print-button").addEventListener("click", () => window.p
 /* フォントと紙面幅の確定後に、発表の項目高さを測り直す。 */
 let presentationPrintActive = false;
 function refreshPresentationPages() {
-  if (currentMode !== "presentation" || presentationPrintActive) return;
+  if (currentMode === "essay" || presentationPrintActive) return;
   try {
-    renderPresentation(currentData.presentation);
+    if (currentMode === "presentation") renderPresentation(currentData.presentation);
+    else renderInterpret(currentData.interpret);
   } catch (error) {
     setStatus(`表示できませんでした：${error.message}`, true);
   }
