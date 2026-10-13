@@ -1,6 +1,10 @@
-# MEKURU — Stage P3
+# MEKURU — Stage P3.2
 
-観測済みJSONを表示する静的UIです。ESSAY MODEはA4縦4ページ、PRESENTATION MODEはスライドと原稿、INTERPRET MODEは本文と設問の観測結果を4セクションで表示します。AIによる観測、解析、採点、添削は行いません。
+観測済みJSONを表示する静的UIです。ESSAY MODEは文章、PRESENTATION MODEはスライドと原稿、INTERPRET MODEは本文と設問の観測結果を4セクションで表示します。すべてのMODEで、観測内容に合わせて必要なA4ページを追加します。AIによる観測、解析、採点、添削は行いません。
+
+**4 SECTIONS. AS MANY PAGES AS NEEDED.**
+
+**NEVER TRIM OBSERVATIONS.**
 
 ## 開き方
 
@@ -20,6 +24,8 @@
 
 画面は入力データの形式だけを確認し、観測内容を判定しません。JSONに誤りがある場合、直前の表示を保持して操作欄に理由を示します。貼り付け内容は外部へ送信せず、保存もしません。
 
+FACTSの本文とEVIDENCE、INFERENCEの本文とREASONを一組として、実際の描画高さでページ分割します。RECEIVEDは1項目、RECONSTRUCTEDは従来の句点改行による1文が分割単位です。セクションは別紙から始まり、継続ページにも見出しを表示します。項目番号はセクション内で継続し、物理ページ番号と総ページ数は生成した用紙に合わせて更新します。RECEIVEDの注記は最終ページのみ、INFERENCEの導入文は先頭ページのみです。
+
 ## PRESENTATION JSON（version 0.2）
 
 `sample-presentation.json` が入力例です。`mode` は `presentation`、`documentType` も `presentation` にしてください。`facts` は `text`、`source`（`slide`／`script`／`both`）、任意の `evidence` を持つ配列です。`received` は `text` と `source`（`slide_only`／`script_only`／`slide_script`）を持つ配列です。`inference` と `reconstructed` はESSAYと同じ構造です。
@@ -28,7 +34,7 @@ FACTSの`source`は画面上でそれぞれSLIDE ONLY／SCRIPT ONLY／SLIDE + SC
 
 4セクションすべて、描画された内容の高さに従ってA4ページを増やします。FACTS／RECEIVEDは1項目、INFERENCEは本文とREASONのセット、RECONSTRUCTEDは句点で区切った1文を単位とし、途中で分割しません。1項目・1文だけでA4の本文領域を超える場合は、内容を省略せずエラーにします。
 
-RECEIVEDの注記は最終ページのみ、INFERENCEの導入文は先頭ページのみ表示します。項目番号はセクション内で継続し、物理ページ番号は全セクションを通した連番です。印刷では画面で確定したページ分割を使用します。印刷前にWebフォントを読み込んでください。
+RECEIVEDの注記は最終ページのみ、INFERENCEの導入文は先頭ページのみ表示します。項目番号はセクション内で継続し、物理ページ番号は全セクションを通した連番です。
 
 ## INTERPRET JSON（version 0.3）
 
@@ -36,4 +42,6 @@ RECEIVEDの注記は最終ページのみ、INFERENCEの導入文は先頭ペー
 
 ## 印刷上の範囲
 
-ESSAYは従来どおりA4縦4枚です。ESSAYへ極端に長い項目を読み込む場合は印刷プレビューを確認してください。PRESENTATIONとINTERPRETでは4セクションすべてを必要な枚数へ分けます。どのMODEも文章の自動縮小・省略は行いません。
+3MODEすべてでA4縦の寸法を計測基準とし、4セクションを必要な枚数へ分けます。短いデータは自然な4ページ構成になります。スマートフォンではA4紙面全体を縮小してプレビューし、画面幅だけで分割結果を変えません。観測内容や印刷文字の自動縮小・省略は行いません。
+
+「印刷」ボタンはWebフォントの読み込み完了を待ち、直接印刷を含む印刷開始時にも現在のデータでA4分割を確定します。不可分の1項目・1文が本文領域を超える場合は、項目を明示したエラーになります。ESSAYでは表示生成に失敗した場合、直前の正常な紙面を保持します。印刷プレビューでは用紙設定・フォント・フッターの収まりも確認してください。

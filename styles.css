@@ -4,6 +4,7 @@
   font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
   --font-structure: "Libre Baskerville", Georgia, serif;
   --font-reading: "Noto Serif JP", "Noto Serif", "Yu Mincho", serif;
+  --footer-credit-height: 12px;
   color: #252525;
   background: #f4f4f2;
 }
@@ -53,7 +54,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 /* 紙面。固定比率の中で余白と文字の階層を設計する。 */
 .sheets { display: grid; gap: 34px; justify-items: center; padding: 0 12px 52px; }
 .sheet { width: min(210mm, 100%); min-height: 297mm; background: #fff; box-shadow: 0 2px 18px rgb(0 0 0 / .055); scroll-margin-top: 12px; }
-.sheet-inner { min-height: 297mm; display: flex; flex-direction: column; padding: 16mm 17mm 15mm; }
+.sheet-inner { min-height: 297mm; display: flex; flex-direction: column; padding: 16mm 17mm calc(15mm - var(--footer-credit-height)); }
 .sheet-heading { flex: none; display: flex; flex-direction: column; align-items: stretch; }
 .page-count { align-self: flex-end; white-space: nowrap; font-size: 14px; line-height: 1.2; letter-spacing: .04em; }
 .page-count span { color: #999; }
@@ -73,20 +74,24 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .reconstructed-content { display: flex; align-items: flex-start; padding-top: 9mm; }
 .reconstructed-body { width: 100%; font-size: 14px; line-height: 1.9; white-space: pre-line; overflow-wrap: anywhere; }
 .sheet-footer { display: flex; justify-content: space-between; align-items: end; gap: 20px; border-top: 1px solid #ddd; padding-top: 9px; color: #8a8a8a; font-size: 10px; line-height: 1.5; }
-.sheet-footer .document-label { max-width: 45%; overflow-wrap: anywhere; }
+/* 追加行と下paddingを同量にし、罫線・本文境界・上段の位置を保つ。 */
+.sheet-footer .document-label { max-width: 45%; overflow-wrap: anywhere; margin-bottom: var(--footer-credit-height); }
 .sheet-footer > span:last-child { text-align: right; white-space: nowrap; letter-spacing: .04em; }
+.sheet-footer .footer-brand > span { display: block; }
+.sheet-footer .footer-main { font-size: 10px; line-height: 15px; }
+.sheet-footer .footer-credit { font-size: 8px; line-height: var(--footer-credit-height); color: #8a8a8a; }
 .sheet-footer i { margin-left: 7px; letter-spacing: 0; }
 
-/* 発表の観測項目は番号・情報源・本文を同じ列で揃える。ESSAYの紙面は変更しない。 */
-.presentation-sheet .sheet-inner { height: 297mm; min-height: 0; }
-.presentation-sheet .sheet-content { min-height: 0; }
+/* 全MODEでA4高さを固定する。発表・読解の情報源は専用の3列で揃える。 */
+.canonical-sheet .sheet-inner { height: 297mm; min-height: 0; }
+.canonical-sheet .sheet-content { min-height: 0; }
 .presentation-observations li { grid-template-columns: 30px 112px minmax(0, 1fr); }
 .presentation-observations li::before { content: none; }
 .presentation-index { grid-column: 1; grid-row: 1; font-size: 12px; line-height: 1.8; color: #888; }
 .source-label { grid-column: 2; grid-row: 1; font-size: 10px; line-height: 1.8; letter-spacing: .04em; color: #777; white-space: nowrap; }
 .presentation-observations .observation-text { grid-column: 3; }
 
-/* ESSAYの狭い画面表示と操作領域。可変ページの紙面は下でA4寸法へ戻す。 */
+/* 狭い画面の操作領域。紙面は下でA4寸法へ戻し、全体を縮小表示する。 */
 @media screen and (max-width: 650px) {
   .workspace-header { align-items: flex-start; flex-direction: column; padding-top: 16px; }
   .workspace-actions { flex-wrap: wrap; }
@@ -96,7 +101,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
   .page-nav { gap: 11px 17px; }
   .sheet { min-height: 0; }
   .sheet-inner { min-height: calc((100vw - 24px) * 297 / 210); padding: 7% 7% 6%; }
-  .presentation-sheet .sheet-inner { height: calc((100vw - 24px) * 297 / 210); min-height: 0; }
+  .canonical-sheet .sheet-inner { height: calc((100vw - 24px) * 297 / 210); min-height: 0; }
   .page-count { font-size: 12px; }
   .heading-block { column-gap: 8px; margin-top: 4%; }
   .heading-block h1 { font-size: clamp(20px, 5.8vw, 31px); letter-spacing: .08em; }
@@ -114,27 +119,27 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 
 /* 可変ページは印刷と同じA4寸法で組み、狭い画面では紙面全体だけを縮小する。 */
 @media screen {
-  #presentation-sheets, #interpret-sheets {
+  #sheets, #presentation-sheets, #interpret-sheets {
     width: 210mm;
     margin-inline: auto;
     padding: 0 0 52px;
     zoom: var(--paper-preview-scale, 1);
   }
-  .presentation-sheet { width: 210mm; height: 297mm; min-height: 0; }
-  .presentation-sheet .sheet-inner { width: 100%; height: 100%; padding: 16mm 17mm 15mm; }
-  .presentation-sheet .page-count { font-size: 14px; }
-  .presentation-sheet .heading-block { column-gap: 16px; margin-top: 6mm; }
-  .presentation-sheet .heading-block h1 { font-size: 31px; }
-  .presentation-sheet .heading-block p { font-size: 14px; }
-  .presentation-sheet .sheet-content { padding-top: 7mm; }
-  .presentation-sheet .observations li { grid-template-columns: 66px minmax(0, 1fr); column-gap: 8px; row-gap: 5px; padding-bottom: 12px; }
-  .presentation-sheet .presentation-observations li { grid-template-columns: 30px 112px minmax(0, 1fr); }
-  .presentation-sheet .source-label { font-size: 10px; }
-  .presentation-sheet .observation-text { font-size: 10pt; }
-  .presentation-sheet .reconstructed-content { padding-top: 9mm; }
-  .presentation-sheet .reconstructed-body { font-size: 10pt; }
-  .presentation-sheet .sheet-footer { font-size: 10px; }
-  .presentation-sheet .sheet-footer i { display: inline; }
+  .canonical-sheet { width: 210mm; height: 297mm; min-height: 0; }
+  .canonical-sheet .sheet-inner { width: 100%; height: 100%; padding: 16mm 17mm calc(15mm - var(--footer-credit-height)); }
+  .canonical-sheet .page-count { font-size: 14px; }
+  .canonical-sheet .heading-block { column-gap: 16px; margin-top: 6mm; }
+  .canonical-sheet .heading-block h1 { font-size: 31px; }
+  .canonical-sheet .heading-block p { font-size: 14px; }
+  .canonical-sheet .sheet-content { padding-top: 7mm; }
+  .canonical-sheet .observations li { grid-template-columns: 66px minmax(0, 1fr); column-gap: 8px; row-gap: 5px; padding-bottom: 12px; }
+  .canonical-sheet .presentation-observations li { grid-template-columns: 30px 112px minmax(0, 1fr); }
+  .canonical-sheet .source-label { font-size: 10px; }
+  .canonical-sheet .observation-text { font-size: 10pt; }
+  .canonical-sheet .reconstructed-content { padding-top: 9mm; }
+  .canonical-sheet .reconstructed-body { font-size: 10pt; }
+  .canonical-sheet .sheet-footer { font-size: 10px; }
+  .canonical-sheet .sheet-footer i { display: inline; }
 }
 
 /* A4縦。ブラウザ側のヘッダー・フッターは印刷設定で無効にする。 */
@@ -144,11 +149,11 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
   html { scroll-behavior: auto; }
   .no-print { display: none !important; }
   .sheets { display: block; padding: 0; }
-  #presentation-sheets, #interpret-sheets { width: 210mm; margin: 0; zoom: 1 !important; }
+  #sheets, #presentation-sheets, #interpret-sheets { width: 210mm; margin: 0; zoom: 1 !important; }
   .sheet { width: 210mm; height: 297mm; min-height: 0; box-shadow: none; margin: 0; break-after: page; page-break-after: always; }
   .sheet:last-child { break-after: auto; page-break-after: auto; }
-  .sheet-inner { width: 100%; height: 100%; min-height: 0; padding: 16mm 17mm 15mm; }
-  .presentation-sheet .sheet-inner { height: 100%; }
+  .sheet-inner { width: 100%; height: 100%; min-height: 0; padding: 16mm 17mm calc(15mm - var(--footer-credit-height)); }
+  .canonical-sheet .sheet-inner { height: 100%; }
   .presentation-observations li { grid-template-columns: 30px 112px minmax(0, 1fr); column-gap: 8px; row-gap: 5px; padding-bottom: 12px; }
   .source-label { font-size: 10px; }
   .heading-block { margin-top: 6mm; }

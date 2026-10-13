@@ -43,10 +43,14 @@ function validatePresentationData(data) {
   return data;
 }
 
-/* 既存の紙面を雛形に使うが、ESSAYの4ページDOMには手を加えない。 */
+/* 印刷に混入しないテンプレートを全MODEで参照する。 */
+function getSectionTemplate(section) {
+  return document.querySelector("#section-templates").content.querySelector(`#${section}`);
+}
+
 function createPresentationSheet(section, data, sequence) {
-  const sheet = document.querySelector(`#${section}`).cloneNode(true);
-  sheet.classList.add("presentation-sheet");
+  const sheet = getSectionTemplate(section).cloneNode(true);
+  sheet.classList.add("presentation-sheet", "canonical-sheet");
   sheet.removeAttribute("id");
   sheet.querySelectorAll("[id]").forEach(element => element.removeAttribute("id"));
   if (sequence === 0) sheet.id = `presentation-${section}`;
@@ -69,7 +73,7 @@ function createPresentationSheet(section, data, sequence) {
       list.classList.add("presentation-observations");
     }
     if (section === "inference" && sequence === 0) {
-      const intro = document.querySelector("#inference .section-intro").cloneNode(true);
+      const intro = getSectionTemplate("inference").querySelector(".section-intro").cloneNode(true);
       content.append(intro);
     }
     content.append(list);
@@ -135,7 +139,7 @@ function renderPresentation(data) {
     });
 
     if (section === "received") {
-      const note = document.querySelector("#received .quiet-note").cloneNode(true);
+      const note = getSectionTemplate("received").querySelector(".quiet-note").cloneNode(true);
       note.textContent = "ここに記載されていない内容は、スライドと原稿だけからは明確に確認できなかった情報です。";
       page.content.append(note);
       if (!fits(page, note)) {
