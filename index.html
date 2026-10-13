@@ -16,7 +16,8 @@
     <script src="sample-interpret.js" defer></script>
     <script src="presentation.js" defer></script>
     <script src="interpret.js" defer></script>
-    <script src="app.js?v=p3" defer></script>
+    <script src="essay.js" defer></script>
+    <script src="app.js?v=p3-2" defer></script>
   </head>
   <body>
     <header class="workspace-header no-print">
@@ -50,8 +51,8 @@
       <p id="status" class="status no-print" role="status" aria-live="polite"></p>
 
       <nav class="page-nav structural-label no-print" id="essay-nav" aria-label="観測記録のページ移動">
-        <a href="#facts">01 FACTS</a><a href="#received">02 RECEIVED</a>
-        <a href="#inference">03 INFERENCE</a><a href="#reconstructed">04 RECONSTRUCTED</a>
+        <a href="#facts">FACTS</a><a href="#received">RECEIVED</a>
+        <a href="#inference">INFERENCE</a><a href="#reconstructed">RECONSTRUCTED</a>
       </nav>
       <nav class="page-nav structural-label no-print mode-hidden" id="presentation-nav" aria-label="発表の観測記録のセクション移動">
         <a href="#presentation-facts">FACTS</a><a href="#presentation-received">RECEIVED</a>
@@ -62,7 +63,7 @@
         <a href="#interpret-inference">INFERENCE</a><a href="#interpret-reconstructed">RECONSTRUCTED</a>
       </nav>
 
-      <div class="sheets" id="sheets">
+      <template id="section-templates">
         <section class="sheet" id="facts" aria-labelledby="facts-heading">
           <div class="sheet-inner">
             <header class="sheet-heading">
@@ -70,7 +71,13 @@
               <div class="heading-block"><h1 class="structural-label" id="facts-heading">FACTS</h1><p class="japanese-caption">文章に存在する情報</p></div>
             </header>
             <div class="sheet-content"><ol class="observations" id="facts-list"></ol></div>
-            <footer class="sheet-footer"><span class="document-label japanese-caption"></span><span class="structural-label">MEKURU <i>Peel back your perception.</i></span></footer>
+            <footer class="sheet-footer">
+              <span class="document-label japanese-caption"></span>
+              <span class="footer-brand structural-label">
+                <span class="footer-main">MEKURU <i>Peel back your perception.</i></span>
+                <span class="footer-credit">Powered by MARZ ENGINE.</span>
+              </span>
+            </footer>
           </div>
         </section>
 
@@ -84,7 +91,13 @@
               <ol class="observations" id="received-list"></ol>
               <p class="quiet-note reading-text">ここに記載されていない内容は、この文章だけからは明確に確認できなかった情報です。</p>
             </div>
-            <footer class="sheet-footer"><span class="document-label japanese-caption"></span><span class="structural-label">MEKURU <i>Peel back your perception.</i></span></footer>
+            <footer class="sheet-footer">
+              <span class="document-label japanese-caption"></span>
+              <span class="footer-brand structural-label">
+                <span class="footer-main">MEKURU <i>Peel back your perception.</i></span>
+                <span class="footer-credit">Powered by MARZ ENGINE.</span>
+              </span>
+            </footer>
           </div>
         </section>
 
@@ -98,7 +111,13 @@
               <p class="section-intro reading-text">この部分を理解するには、読み手側で補完が必要です。</p>
               <ol class="observations" id="inference-list"></ol>
             </div>
-            <footer class="sheet-footer"><span class="document-label japanese-caption"></span><span class="structural-label">MEKURU <i>Peel back your perception.</i></span></footer>
+            <footer class="sheet-footer">
+              <span class="document-label japanese-caption"></span>
+              <span class="footer-brand structural-label">
+                <span class="footer-main">MEKURU <i>Peel back your perception.</i></span>
+                <span class="footer-credit">Powered by MARZ ENGINE.</span>
+              </span>
+            </footer>
           </div>
         </section>
 
@@ -109,10 +128,17 @@
               <div class="heading-block"><h1 class="structural-label" id="reconstructed-heading">RECONSTRUCTED</h1><p class="japanese-caption">初見者の中に再構成された像</p></div>
             </header>
             <div class="sheet-content reconstructed-content"><div class="reconstructed-body reading-text" id="reconstructed-body"></div></div>
-            <footer class="sheet-footer"><span class="document-label japanese-caption"></span><span class="structural-label">MEKURU <i>Peel back your perception.</i></span></footer>
+            <footer class="sheet-footer">
+              <span class="document-label japanese-caption"></span>
+              <span class="footer-brand structural-label">
+                <span class="footer-main">MEKURU <i>Peel back your perception.</i></span>
+                <span class="footer-credit">Powered by MARZ ENGINE.</span>
+              </span>
+            </footer>
           </div>
         </section>
-      </div>
+      </template>
+      <div class="sheets" id="sheets"></div>
       <div class="sheets mode-hidden" id="presentation-sheets"></div>
       <div class="sheets mode-hidden" id="interpret-sheets"></div>
     </main>

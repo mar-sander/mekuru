@@ -78,7 +78,7 @@ function renderInterpret(data) {
     });
 
     if (section === "received") {
-      const note = document.querySelector("#received .quiet-note").cloneNode(true);
+      const note = getSectionTemplate("received").querySelector(".quiet-note").cloneNode(true);
       note.textContent = "ここに記載されていない内容は、本文と設問だけからは明確に確認できなかった情報です。";
       page.content.append(note);
       if (!fits(page, note)) {

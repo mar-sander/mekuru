@@ -86,11 +86,6 @@ function makeObservation(text, detail, detailLabel) {
   return item;
 }
 
-function replaceList(selector, items) {
-  const list = document.querySelector(selector);
-  list.replaceChildren(...items);
-}
-
 /* JSONはそのままに、句点ごとに一文を表示する。既存の文頭改行は重ねない。 */
 function renderReconstructed(body, container = document.querySelector("#reconstructed-body")) {
   const nodes = [];
@@ -116,23 +111,7 @@ function renderReconstructed(body, container = document.querySelector("#reconstr
   container.replaceChildren(...nodes);
 }
 
-function renderEssay(data) {
-  replaceList("#facts-list", data.facts.map(item =>
-    makeObservation(item.text, item.evidence, "EVIDENCE")));
-  replaceList("#received-list", data.received.map(text =>
-    makeObservation(text)));
-  replaceList("#inference-list", data.inference.map(item =>
-    makeObservation(item.text, item.reason, "REASON")));
-
-  renderReconstructed(data.reconstructed.body);
-  const type = documentTypeLabels[data.documentType] || data.documentType;
-  document.querySelectorAll("#sheets .document-label").forEach(label => {
-    label.textContent = `${type} · ${data.title}`;
-  });
-  document.title = `${data.title} | MEKURU`;
-}
-
-/* MODE切替は操作領域だけで行い、ESSAYの紙面DOMを維持する。 */
+/* 各MODEの最後の正常なデータを使って表示を切り替える。 */
 function updateModeVisibility() {
   const presentation = currentMode === "presentation";
   const interpret = currentMode === "interpret";
@@ -159,6 +138,7 @@ function showData(data) {
   } catch (error) {
     currentMode = previousMode;
     updateModeVisibility();
+    if (previousMode === "essay") renderEssay(currentData.essay);
     if (previousMode === "presentation") renderPresentation(currentData.presentation);
     if (previousMode === "interpret") renderInterpret(currentData.interpret);
     throw error;
@@ -228,36 +208,55 @@ jsonFile.addEventListener("change", async () => {
 
 document.querySelector("#print-button").addEventListener("click", async () => {
   await document.fonts.ready;
-  refreshPresentationPages();
-  window.print();
+  if (refreshPages()) window.print();
 });
 
 /* 可変ページは常にA4で組版する。画面幅の変更はプレビュー倍率だけへ反映する。 */
-let presentationPrintActive = false;
+let printActive = false;
+let initialFontsReady = false;
+let fontPaginationPending = false;
 function updatePaperPreviewScale() {
   const scale = Math.min(1, (document.documentElement.clientWidth - 24) / A4_PAGE_WIDTH_PX);
   document.documentElement.style.setProperty("--paper-preview-scale", String(scale));
 }
-function refreshPresentationPages(forPrint = false) {
-  if (currentMode === "essay" || (presentationPrintActive && !forPrint)) return;
+function refreshPages(forPrint = false) {
+  if (printActive && !forPrint) return false;
   try {
     if (currentMode === "presentation") renderPresentation(currentData.presentation);
-    else renderInterpret(currentData.interpret);
+    else if (currentMode === "interpret") renderInterpret(currentData.interpret);
+    else renderEssay(currentData.essay);
+    return true;
   } catch (error) {
     setStatus(`表示できませんでした：${error.message}`, true);
+    return false;
   }
 }
 
 updatePaperPreviewScale();
-document.fonts.ready.then(refreshPresentationPages);
+function refreshAfterFonts() {
+  if (printActive) fontPaginationPending = true;
+  else refreshPages();
+}
+document.fonts.ready.then(() => {
+  initialFontsReady = true;
+  refreshAfterFonts();
+});
+// 別のJSONで新しい文字用のフォントが読み込まれた場合にも再計測する。
+document.fonts.addEventListener("loadingdone", () => {
+  if (initialFontsReady) refreshAfterFonts();
+});
 window.addEventListener("resize", updatePaperPreviewScale);
 // 直接の印刷操作でも最新のデータをA4条件で確定する。
 window.addEventListener("beforeprint", () => {
-  refreshPresentationPages(true);
-  presentationPrintActive = true;
+  refreshPages(true);
+  printActive = true;
 });
 window.addEventListener("afterprint", () => {
-  presentationPrintActive = false;
+  printActive = false;
+  if (fontPaginationPending) {
+    fontPaginationPending = false;
+    refreshPages();
+  }
 });
 
 renderEssay(validateData(SAMPLE_DATA));
